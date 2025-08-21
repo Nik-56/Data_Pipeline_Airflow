@@ -49,11 +49,11 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow123@postgres/stock_data
       - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow123@postgres/stock_data
       - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
-      - AIRFLOW__CORE__FERNET_KEY=kGVRFPN4MkbG844pur6imMnliIIJG6OlIvpkiFPer5c=
+      - AIRFLOW__CORE__FERNET_KEY=airflow_core_fernet_key
       - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow123@postgres:5432/stock_data
-      - ALPHA_VANTAGE_API_KEY=CENSCIR7YRRC5AIR
+      - ALPHA_VANTAGE_API_KEY=alpha_vantage_api_key
       - PYTHONPATH=/opt/airflow:/opt/airflow/scripts
     volumes:
       - ./dags:/opt/airflow/dags
@@ -85,9 +85,9 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow123@postgres/stock_data
       - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow123@postgres/stock_data
       - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
-      - AIRFLOW__CORE__FERNET_KEY=kGVRFPN4MkbG844pur6imMnliIIJG6OlIvpkiFPer5c=
+      - AIRFLOW__CORE__FERNET_KEY=airflow_core_fernet_key
       - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow123@postgres:5432/stock_data
-      - ALPHA_VANTAGE_API_KEY=CENSCIR7YRRC5AIR
+      - ALPHA_VANTAGE_API_KEY=alpha_vantage_api_key
       - PYTHONPATH=/opt/airflow:/opt/airflow/scripts
     volumes:
       - ./dags:/opt/airflow/dags
@@ -117,9 +117,9 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow123@postgres/stock_data
       - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow123@postgres/stock_data
       - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
-      - AIRFLOW__CORE__FERNET_KEY=kGVRFPN4MkbG844pur6imMnliIIJG6OlIvpkiFPer5c=
+      - AIRFLOW__CORE__FERNET_KEY=airflow_core_fernet_key
       - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow123@postgres:5432/stock_data
-      - ALPHA_VANTAGE_API_KEY=CENSCIR7YRRC5AIR
+      - ALPHA_VANTAGE_API_KEY=alpha_vantage_api_key
       - PYTHONPATH=/opt/airflow:/opt/airflow/scripts\
     volumes:
       - ./dags:/opt/airflow/dags
