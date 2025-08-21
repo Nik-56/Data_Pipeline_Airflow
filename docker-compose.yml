@@ -1,0 +1,143 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:13.11
+    container_name: stock_postgres
+    environment:
+      POSTGRES_DB: stock_data
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow", "-d", "stock_data"]
+      interval: 5s
+      retries: 5
+    networks:
+      - airflow
+
+  # Redis (for Airflow Celery)
+  redis:
+    image: redis:7-alpine
+    container_name: stock_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    networks:
+      - airflow
+
+  # Airflow Webserver
+  airflow-webserver:
+    build: .
+    container_name: stock_airflow_webserver
+    command: webserver
+    entrypoint: ./scripts/entrypoint.sh
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow123@postgres/stock_data
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow123@postgres/stock_data
+      - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      - AIRFLOW__CORE__FERNET_KEY=kGVRFPN4MkbG844pur6imMnliIIJG6OlIvpkiFPer5c=
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow123@postgres:5432/stock_data
+      - ALPHA_VANTAGE_API_KEY=CENSCIR7YRRC5AIR
+      - PYTHONPATH=/opt/airflow:/opt/airflow/scripts
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./scripts:/opt/airflow/scripts
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - airflow
+
+  # Airflow Scheduler
+  airflow-scheduler:
+    build: .
+    container_name: stock_airflow_scheduler
+    command: scheduler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow123@postgres/stock_data
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow123@postgres/stock_data
+      - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      - AIRFLOW__CORE__FERNET_KEY=kGVRFPN4MkbG844pur6imMnliIIJG6OlIvpkiFPer5c=
+      - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow123@postgres:5432/stock_data
+      - ALPHA_VANTAGE_API_KEY=CENSCIR7YRRC5AIR
+      - PYTHONPATH=/opt/airflow:/opt/airflow/scripts
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./scripts:/opt/airflow/scripts
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - airflow
+
+  # Airflow Worker
+  airflow-worker:
+    build: .
+    container_name: stock_airflow_worker
+    command: celery worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow123@postgres/stock_data
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow123@postgres/stock_data
+      - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      - AIRFLOW__CORE__FERNET_KEY=kGVRFPN4MkbG844pur6imMnliIIJG6OlIvpkiFPer5c=
+      - AIRFLOW_CONN_POSTGRES_DEFAULT=postgres://airflow:airflow123@postgres:5432/stock_data
+      - ALPHA_VANTAGE_API_KEY=CENSCIR7YRRC5AIR
+      - PYTHONPATH=/opt/airflow:/opt/airflow/scripts\
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./scripts:/opt/airflow/scripts
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - airflow
+
+volumes:
+  postgres_data:
+
+networks:
+  airflow:
