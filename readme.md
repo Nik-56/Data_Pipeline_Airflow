@@ -30,6 +30,9 @@ stock-pipeline/
 ├── dags/
 │   └── stock_pipeline.py      # Airflow DAG definition
 ├── logs/                      # Airflow logs (created at runtime)
+|   ├── scheduler/
+|   └── webserver/ 
+|   └── worker/
 └── plugins/                   # Airflow plugins (optional)
 
 
